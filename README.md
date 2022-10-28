@@ -16,26 +16,12 @@
 
 * Investigate performance of supervised / self-supervised / sliding contrastive learning approaches for different levels of noise in scraped datasets
 
-* Build custom PyTorch SupCon and SimCLR losses
-
 * Investigate required network scaling for outlier detection with dataset size, image size, and intrinsic class differentiation difficulty
 
 * Quantify class differentiation difficulty
 
-* Build random image augmentation stack for model training
-	* Blurring
-	* Random crop + upsample to original size
-	* Color distortion
-	* CutOut
-	* Rotation
-	* Reflection
+* Create __all__ variables in all __init__.py files
 
-### Ideas:
-
-* Create a (hopefully) training procedure that is robust to dataset noise by initially using the SimCLR loss, and then slowly switching to the SupCon loss as training continues. 
-
-* Can we frame the labelling problem as an adversarial game of some kind? Or some kind of two-player game where we can use a self-supervised representation learner, and a linear classifer that uses transferred representationg (modulo some finetuning)?
-	* 
 
 ### References
 
