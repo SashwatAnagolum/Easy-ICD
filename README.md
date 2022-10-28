@@ -1,4 +1,4 @@
-# Easy-ICD: Automatic generation and cleaning of image classification datasets
+# Easy-ICD: Automatic scraping and denoising of image classification datasets
 
 ## CMPSC 445 Final Project
 
@@ -16,20 +16,12 @@
 
 * Investigate performance of supervised / self-supervised / sliding contrastive learning approaches for different levels of noise in scraped datasets
 
-* Build custom PyTorch SupCon and SimCLR losses
-
 * Investigate required network scaling for outlier detection with dataset size, image size, and intrinsic class differentiation difficulty
 
 * Quantify class differentiation difficulty
 
-* Build random image augmentation stack for model training
-	* Gaussian noise
-	* Blurring
-	* Random crop + upsample to original size
-	* Color distortion
-	* CutOut
-	* Rotation
-	* Reflection
+* Create __all__ variables in all __init__.py files
+
 
 ### References
 
