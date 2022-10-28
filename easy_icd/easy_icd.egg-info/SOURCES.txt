@@ -1,0 +1,12 @@
+LICENSE
+README.md
+pyproject.toml
+easy_icd/__init__.py
+easy_icd.egg-info/PKG-INFO
+easy_icd.egg-info/SOURCES.txt
+easy_icd.egg-info/dependency_links.txt
+easy_icd.egg-info/top_level.txt
+easy_icd/outlier_detection/__init__.py
+easy_icd/outlier_removal/__init__.py
+easy_icd/scraping/__init__.py
+easy_icd/scraping/scrape_images.py

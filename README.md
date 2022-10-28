@@ -1,4 +1,4 @@
-# Easy-ICD: Automatic generation and cleaning of image classification datasets
+# Easy-ICD: Automatic scraping and denoising of image classification datasets
 
 ## CMPSC 445 Final Project
 
@@ -23,13 +23,19 @@
 * Quantify class differentiation difficulty
 
 * Build random image augmentation stack for model training
-	* Gaussian noise
 	* Blurring
 	* Random crop + upsample to original size
 	* Color distortion
 	* CutOut
 	* Rotation
 	* Reflection
+
+### Ideas:
+
+* Create a (hopefully) training procedure that is robust to dataset noise by initially using the SimCLR loss, and then slowly switching to the SupCon loss as training continues. 
+
+* Can we frame the labelling problem as an adversarial game of some kind? Or some kind of two-player game where we can use a self-supervised representation learner, and a linear classifer that uses transferred representationg (modulo some finetuning)?
+	* 
 
 ### References
 

@@ -1,1 +1,5 @@
 images/
+driver/
+old/
+.ipynb_checkpoints/
+notebooks/
