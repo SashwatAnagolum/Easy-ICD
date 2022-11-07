@@ -1,0 +1,107 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html><head><title>Python: module scrape_images</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+</head><body bgcolor="#f0f0f8">
+
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="heading">
+<tr bgcolor="#7799ee">
+<td valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial">&nbsp;<br><big><big><strong>scrape_images</strong></big></big></font></td
+><td align=right valign=bottom
+><font color="#ffffff" face="helvetica, arial"><a href=".">index</a><br><a href="file:c%3A%5C00_classes%5Ccmpsc%20445%5Cproject%5Ceasy-icd-main%5Ceasy_icd%5Ceasy_icd%5Cscraping%5Cscrape_images.py">c:\00_classes\cmpsc 445\project\easy-icd-main\easy_icd\easy_icd\scraping\scrape_images.py</a></font></td></tr></table>
+    <p></p>
+<p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#aa55cc">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Modules</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#aa55cc"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><table width="100%" summary="list"><tr><td width="25%" valign=top><a href="PIL.Image.html">PIL.Image</a><br>
+<a href="PIL.ImageOps.html">PIL.ImageOps</a><br>
+<a href="flickrapi.html">flickrapi</a><br>
+</td><td width="25%" valign=top><a href="io.html">io</a><br>
+<a href="itertools.html">itertools</a><br>
+<a href="json.html">json</a><br>
+</td><td width="25%" valign=top><a href="numpy.html">numpy</a><br>
+<a href="os.html">os</a><br>
+<a href="requests.html">requests</a><br>
+</td><td width="25%" valign=top><a href="time.html">time</a><br>
+</td></tr></table></td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#eeaa77">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Functions</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#eeaa77"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><dl><dt><a name="-scrape_images"><strong>scrape_images</strong></a>(class_names: List[str], image_dir: Optional[str] = None, class_keywords: Optional[List[List[str]]] = None, images_per_class: Union[int, List[int], List[List[int]]] = None, image_size: Optional[Tuple[int, int]] = None, crop_to_fit: Optional[bool] = False) -&gt; Dict</dt><dd><tt>&nbsp;&nbsp;&nbsp;&nbsp;Scrape&nbsp;images:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Scrape&nbsp;images&nbsp;using&nbsp;the&nbsp;Flickr&nbsp;API&nbsp;based&nbsp;on&nbsp;the&nbsp;results&nbsp;of&nbsp;Flickr&nbsp;searches<br>
+&nbsp;&nbsp;&nbsp;&nbsp;using&nbsp;the&nbsp;search&nbsp;terms&nbsp;passed&nbsp;in.&nbsp;Images&nbsp;will&nbsp;be&nbsp;saved&nbsp;in&nbsp;directories&nbsp;given&nbsp;by<br>
+&nbsp;&nbsp;&nbsp;&nbsp;the&nbsp;class_names.&nbsp;Users&nbsp;can&nbsp;specify&nbsp;mutliple&nbsp;search&nbsp;terms&nbsp;per&nbsp;class&nbsp;in&nbsp;order&nbsp;to&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;ex.&nbsp;force&nbsp;image&nbsp;diversity&nbsp;or&nbsp;enable&nbsp;cleaner&nbsp;image&nbsp;results,&nbsp;as&nbsp;well&nbsp;as&nbsp;the<br>
+&nbsp;&nbsp;&nbsp;&nbsp;proportion&nbsp;of&nbsp;images&nbsp;that&nbsp;should&nbsp;come&nbsp;from&nbsp;the&nbsp;&nbsp;results&nbsp;of&nbsp;each&nbsp;search&nbsp;term&nbsp;for<br>
+&nbsp;&nbsp;&nbsp;&nbsp;a&nbsp;class.<br>
+&nbsp;<br>
+arguments:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;class_names:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;List[str]&nbsp;-&nbsp;basic&nbsp;search&nbsp;terms<br>
+&nbsp;&nbsp;&nbsp;&nbsp;image_dir:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OPTIONAL&nbsp;[str]&nbsp;-&nbsp;path&nbsp;for&nbsp;directory&nbsp;to&nbsp;save&nbsp;scraped&nbsp;images<br>
+&nbsp;&nbsp;&nbsp;&nbsp;class_keywords:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OPTIONAL&nbsp;List[List[str]]&nbsp;-&nbsp;advance&nbsp;search&nbsp;terms<br>
+&nbsp;&nbsp;&nbsp;&nbsp;images_per_class:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;Union[int,&nbsp;List[int],&nbsp;List[List[int]]]&nbsp;-&nbsp;images&nbsp;to&nbsp;scrape&nbsp;per&nbsp;class<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;name.&nbsp;&nbsp;Pass&nbsp;List[int]&nbsp;for&nbsp;different&nbsp;amounts&nbsp;of&nbsp;each&nbsp;'class_names'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;and&nbsp;List[List[int]]&nbsp;for&nbsp;different&nbsp;amounts&nbsp;of&nbsp;each&nbsp;'class_keyword'<br>
+&nbsp;&nbsp;&nbsp;&nbsp;image_size:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OPTIONAL&nbsp;Tuple[int,&nbsp;int]&nbsp;-&nbsp;desired&nbsp;size&nbsp;of&nbsp;saved&nbsp;images<br>
+&nbsp;&nbsp;&nbsp;&nbsp;crop_to_fit:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OPTIONAL&nbsp;[bool]&nbsp;-&nbsp;true&nbsp;to&nbsp;crop,&nbsp;default&nbsp;=&nbsp;false<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;dictionary&nbsp;containing&nbsp;the&nbsp;following&nbsp;for&nbsp;each&nbsp;class&nbsp;name:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time_taken_in_seconds&nbsp;(float),&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;num_desired_images&nbsp;(int),&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;num_saved_images&nbsp;(int),&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;successful&nbsp;(bool)</tt></dd></dl>
+ <dl><dt><a name="-scrape_images_with_search_term"><strong>scrape_images_with_search_term</strong></a>(flickr_handle: Any, search_term: str, num_desired_images: int, image_dir: str, image_size: Optional[Tuple[int, int]] = None, crop_to_fit: Optional[bool] = False) -&gt; Dict</dt><dd><tt>&nbsp;&nbsp;&nbsp;&nbsp;Scrape&nbsp;images&nbsp;with&nbsp;search&nbsp;term:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;Scrape&nbsp;images&nbsp;from&nbsp;the&nbsp;results&nbsp;of&nbsp;a&nbsp;Flicker&nbsp;search&nbsp;using&nbsp;the&nbsp;passed&nbsp;in&nbsp;search<br>
+&nbsp;&nbsp;&nbsp;&nbsp;term&nbsp;until&nbsp;num_desired_images&nbsp;have&nbsp;been&nbsp;saved&nbsp;or&nbsp;there&nbsp;are&nbsp;no&nbsp;more&nbsp;search&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;results.&nbsp;Users&nbsp;can&nbsp;optionally&nbsp;specify&nbsp;an&nbsp;image_size&nbsp;that&nbsp;all&nbsp;scraped&nbsp;images<br>
+&nbsp;&nbsp;&nbsp;&nbsp;are&nbsp;resized&nbsp;to&nbsp;before&nbsp;saving,&nbsp;and&nbsp;specify&nbsp;whether&nbsp;the&nbsp;image&nbsp;should&nbsp;be&nbsp;resized<br>
+&nbsp;&nbsp;&nbsp;&nbsp;and&nbsp;cropped&nbsp;to&nbsp;fit&nbsp;the&nbsp;desired&nbsp;size,&nbsp;or&nbsp;resized&nbsp;and&nbsp;padded.<br>
+&nbsp;<br>
+arguments:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;flickr_handle:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(Any)&nbsp;-&nbsp;specific&nbsp;flickr&nbsp;username<br>
+&nbsp;&nbsp;&nbsp;&nbsp;search_term:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(str)&nbsp;-&nbsp;term&nbsp;to&nbsp;enter&nbsp;into&nbsp;flickr&nbsp;search<br>
+&nbsp;&nbsp;&nbsp;&nbsp;num_desired_images:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(int)&nbsp;-&nbsp;number&nbsp;of&nbsp;images&nbsp;you&nbsp;want&nbsp;to&nbsp;save<br>
+&nbsp;&nbsp;&nbsp;&nbsp;image_dir:&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;(str)&nbsp;-&nbsp;path&nbsp;for&nbsp;directory&nbsp;to&nbsp;save&nbsp;scraped&nbsp;images<br>
+&nbsp;&nbsp;&nbsp;&nbsp;image_size:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OPTIONAL&nbsp;Tuple[int,&nbsp;int]&nbsp;-&nbsp;desired&nbsp;size&nbsp;of&nbsp;saved&nbsp;images<br>
+&nbsp;&nbsp;&nbsp;&nbsp;crop_to_fit:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;OPTIONAL&nbsp;[bool]&nbsp;-&nbsp;true&nbsp;to&nbsp;crop,&nbsp;default&nbsp;=&nbsp;false<br>
+&nbsp;<br>
+Returns:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;dictionary&nbsp;containing&nbsp;the&nbsp;following&nbsp;for&nbsp;each&nbsp;class&nbsp;name:<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;successful&nbsp;(bool),<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;num_desired_images&nbsp;(int),&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;num_saved_images&nbsp;(int),&nbsp;<br>
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;time_taken_in_seconds&nbsp;(float)</tt></dd></dl>
+</td></tr></table><p>
+<table width="100%" cellspacing=0 cellpadding=2 border=0 summary="section">
+<tr bgcolor="#55aa55">
+<td colspan=3 valign=bottom>&nbsp;<br>
+<font color="#ffffff" face="helvetica, arial"><big><strong>Data</strong></big></font></td></tr>
+    
+<tr><td bgcolor="#55aa55"><tt>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</tt></td><td>&nbsp;</td>
+<td width="100%"><strong>Any</strong> = typing.Any<br>
+<strong>Dict</strong> = typing.Dict<br>
+<strong>List</strong> = typing.List<br>
+<strong>Optional</strong> = typing.Optional<br>
+<strong>Tuple</strong> = typing.Tuple<br>
+<strong>Union</strong> = typing.Union</td></tr></table>
+</body></html>
