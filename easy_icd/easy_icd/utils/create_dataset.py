@@ -22,6 +22,16 @@ class EasyICDDataset(Dataset):
 				 target_transform: Optional[Callable] = None) -> None:
 		"""
 		Constructor for EasyICD dataset objects.
+		
+		Args:
+		    image_dir :
+		    	str - full folder path to save images to
+		    class_names : 
+		    	List[str] - List of keywords used in search
+		    image_transform : 
+		    	Optional[Callable] - image transformation method to apply to images
+		    target_transform : 
+		    	Optional[Callable] - method to apply transformations to masks aswell 
 		"""
 		self.image_dir = image_dir
 		self.class_dirs = [os.path.join(
