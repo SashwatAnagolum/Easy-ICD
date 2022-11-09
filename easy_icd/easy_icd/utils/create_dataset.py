@@ -22,6 +22,16 @@ class EasyICDDataset(Dataset):
 				 target_transform: Optional[Callable] = None) -> None:
 		"""
 		Constructor for EasyICD dataset objects.
+		
+		Args:
+		    image_dir :
+		    	str - full folder path to save images to
+		    class_names : 
+		    	List[str] - List of keywords used in search
+		    image_transform : 
+		    	Optional[Callable] - image transformation method to apply to images
+		    target_transform : 
+		    	Optional[Callable] - method to apply transformations to masks aswell 
 		"""
 		self.image_dir = image_dir
 		self.class_dirs = [os.path.join(
@@ -56,6 +66,13 @@ class EasyICDDataset(Dataset):
 	def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
 		"""
 		Get an image - label pair.
+		
+		Args:
+		    idx :
+		    	int - index of the image
+		
+		Returns:
+		    Tuple with image(Tensor) and label(int)
 		"""
 		label = np.min(np.argwhere(
 			self.cum_num_images_per_class > idx).flatten()) - 1
@@ -85,11 +102,25 @@ def get_one_hot_transform(num_classes: int) -> torch.Tensor:
 	"""
 	Get one hot transform:
 	Get a transform that converts numeric labels into one-hot encoded vectors.
+	
+	Args:
+	    num_classes :
+	    	int - number of classes in searh
+		
+	Returns:
+	    Tensor of one-hot encoded vectors 
 	"""
 	def one_hot_transform(label: int) -> torch.Tensor:
 		"""
 		One hot transform:
 		Transform a numeric label into a one-hot vector.
+		
+		Args:
+		    label :
+		    	int - label of image
+		
+		Returns:
+		    a one-hot vector
 		"""
 		one_hot_vector = torch.zeros(num_classes)
 		one_hot_vector[label] = 1
@@ -104,6 +135,18 @@ def create_dataset(image_dir: str, class_names: Optional[List[str]] = None,
 	Create dataset:
 	Create an EasyICD dataset from the images scraped using easy_icd.scraping
 	functions.
+	
+	Args:
+	    image_dir :
+	    	str - full folder path to save images to
+	    class_names : 
+	    	Optional[List[str]] - List of keywords used in search
+	    one_hot_labels : 
+	    	Optional[bool] - true for one-hot labels, default = false
+		
+	Returns:
+	    An Easy ICD Dataset
+	    	
 	"""
 	if class_names is None:
 		class_names = [i for i in os.listdir(image_dir) if os.path.isdir(

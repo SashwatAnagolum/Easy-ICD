@@ -22,6 +22,28 @@ def scrape_images_with_search_term(flickr_handle: Any, search_term: str,
 	results. Users can optionally specify an image_size that all scraped images
 	are resized to before saving, and specify whether the image should be resized
 	and cropped to fit the desired size, or resized and padded.
+	
+	arguments:
+	    flickr_handle: 
+      		(Any) - specific flickr username
+            search_term:
+		(str) - term to enter into flickr search
+            num_desired_images:
+                (int) - number of images you want to save
+            image_dir: 
+            	(str) - path for directory to save scraped images
+            image_size:
+            	OPTIONAL Tuple[int, int] - desired size of saved images
+            crop_to_fit:
+            	OPTIONAL [bool] - true to crop, default = false
+    
+    	Returns:
+            dictionary containing the following for each class name:
+            	successful (bool),
+            	num_desired_images (int), 
+            	num_saved_images (int), 
+            	time_taken_in_seconds (float)
+	    
 	"""
 	url_string = 'https://live.staticflickr.com/{}/{}_{}.jpg'
 	image_file_name_string = '{}.jpg'
@@ -102,6 +124,30 @@ def scrape_images(class_names: List[str], image_dir: Optional[str] = None,
 	ex. force image diversity or enable cleaner image results, as well as the
 	proportion of images that should come from the  results of each search term for
 	a class.
+	
+	arguments:
+            class_names: 
+            	List[str] - basic search terms
+            image_dir: 
+            	OPTIONAL [str] - path for directory to save scraped images
+            class_keywords: 
+            	OPTIONAL List[List[str]] - advance search terms
+            images_per_class: 
+            	Union[int, List[int], List[List[int]]] - images to scrape per class
+            	name.  Pass List[int] for different amounts of each 'class_names'
+            	and List[List[int]] for different amounts of each 'class_keyword'
+            image_size:
+            	OPTIONAL Tuple[int, int] - desired size of saved images
+            crop_to_fit:
+            	OPTIONAL [bool] - true to crop, default = false
+    
+    	Returns:
+            dictionary containing the following for each class name:
+            	time_taken_in_seconds (float), 
+            	num_desired_images (int), 
+            	num_saved_images (int), 
+            	successful (bool)
+	    
 	"""
 	key = "91c796378356002c5ba8be27758cada5"
 	secret = "fd4f5ab352fa08e8"
