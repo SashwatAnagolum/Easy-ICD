@@ -6,6 +6,7 @@ import time
 import itertools
 import numpy as np
 import json
+import traceback
 
 from PIL import Image, ImageOps
 from typing import List, Union, Dict, Optional, Tuple, Any
@@ -38,47 +39,47 @@ def scrape_images_with_search_term(flickr_handle: Any, search_term: str,
 	num_saved_images = 0
 	scraping_time_start = time.time()
 	
-	try:
-		while (num_saved_images < num_desired_images):
+	while (num_saved_images < num_desired_images):
+		try:
 			photo = next(iter(photo_stream))
+		except Exception as e:
+			break
 
-			photo_secret = photo.get('secret')
-			photo_server_id = photo.get('server')
-			photo_id = photo.get('id')
+		photo_secret = photo.get('secret')
+		photo_server_id = photo.get('server')
+		photo_id = photo.get('id')
 
-			photo_url = url_string.format(photo_server_id, photo_id, photo_secret)
-			photo_unique_id = photo_server_id + '_' + photo_id + '_' + photo_secret
+		photo_url = url_string.format(photo_server_id, photo_id, photo_secret)
+		photo_unique_id = photo_server_id + '_' + photo_id + '_' + photo_secret
 
-			try:
-				if existing_image_names_dict[photo_unique_id]:
-					pass
-			except KeyError:
-				response = requests.get(photo_url)
+		try:
+			if existing_image_names_dict[photo_unique_id]:
+				pass
+		except KeyError:
+			response = requests.get(photo_url)
 
-				if response.status_code == 200:
-					image_file = io.BytesIO(response.content)
-					image = Image.open(image_file).convert('RGB')
+			if response.status_code == 200:
+				image_file = io.BytesIO(response.content)
+				image = Image.open(image_file).convert('RGB')
 
-					if image_size:
-						if crop_to_fit:
-							image = ImageOps.fit(image, image_size)
-						else:
-							image.thumbnail(image_size)    
-							image = ImageOps.pad(image, image_size)
+				if image_size:
+					if crop_to_fit:
+						image = ImageOps.fit(image, image_size)
+					else:
+						image.thumbnail(image_size)    
+						image = ImageOps.pad(image, image_size)
 							
 
-					image_file_name = image_file_name_string.format(
-						num_images_scraped_already + num_saved_images)
+				image_file_name = image_file_name_string.format(
+					num_images_scraped_already + num_saved_images)
 
-					image_file_path = os.path.join(image_dir, image_file_name)
+				image_file_path = os.path.join(image_dir, image_file_name)
 
-					with open(image_file_path, 'wb') as f:
-						image.save(f, 'JPEG', quality=85)
+				with open(image_file_path, 'wb') as f:
+					image.save(f, 'JPEG', quality=85)
 
-					num_saved_images += 1
-					existing_image_names_dict[photo_unique_id] = True
-	except StopIteration:
-		pass
+				num_saved_images += 1
+				existing_image_names_dict[photo_unique_id] = True
 	
 	scraping_time = time.time() - scraping_time_start
 		
@@ -166,6 +167,11 @@ def scrape_images(class_names: List[str], image_dir: Optional[str] = None,
 		info_dict[class_name]['num_desired_images'] = int(num_desired_class_images)
 		info_dict[class_name]['num_saved_images'] = int(num_saved_class_images)  
 		info_dict[class_name]['successful'] = bool(scrape_successful)
+
+		json_file_path = os.path.join(class_dir, 'class_scraping_info.json')
+		
+		with open(json_file_path, 'w') as f:
+			json.dump(info_dict[class_name], f)
 
 	total_scraping_time = time.time() - total_scraping_time_start
 	info_dict['time_taken_in_seconds'] = float(total_scraping_time)
