@@ -48,22 +48,30 @@ class SimCLRLoss(nn.Module):
 		num_views = features.shape[1]
 		num_samples = batch_size * num_views
 
-		numerator_mask = torch.eye(batch_size).repeat(num_views, num_views)
-		no_self_similarity_mask = torch.ones((num_samples, num_samples))
-		no_self_similarity_mask = torch.sub(no_self_similarity_mask,
-			torch.eye(num_samples))
+		device = torch.device('cuda' if features.is_cuda else 'cpu')
 
-		denominator_mask = torch.ones((num_samples, num_samples))
+		no_self_similarity_mask = torch.ones((num_samples, num_samples),
+			dtype=torch.float32).to(device)
+
+		no_self_similarity_mask = torch.sub(no_self_similarity_mask,
+			torch.eye(num_samples, dtype=torch.float32).to(device))
+
+		numerator_mask = torch.eye(batch_size, dtype=torch.float32).to(device)
+
+		denominator_mask = torch.ones((num_samples, num_samples)).to(device)
 		denominator_mask = torch.mul(denominator_mask, no_self_similarity_mask)
 
 		if labels is not None:
 			labels = labels.view(-1, 1)
-			labels_same_filter = torch.eq(labels, labels.T).float()
+			labels_same_filter = torch.eq(labels, labels.T).float().to(device)
 
 			labels_same_filter = torch.sub(labels_same_filter,
-				torch.eye(batch_size)).repeat(num_views, num_views)
+				numerator_mask).repeat(num_views, num_views)
 
 			denominator_mask = torch.sub(denominator_mask, labels_same_filter)
+
+		numerator_mask = torch.mul(numerator_mask.repeat(num_views, num_views),
+			no_self_similarity_mask)
 
 		if self.normalize_features:
 			features = torch.div(features, torch.linalg.norm(features, dim=2,

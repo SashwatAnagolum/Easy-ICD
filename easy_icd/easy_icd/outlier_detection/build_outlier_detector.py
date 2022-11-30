@@ -86,7 +86,8 @@ class ResNet(torch.nn.Module):
 	"""
 	def __init__(self, num_blocks: Optional[List[int]] = None,
 				 in_channels: Optional[int] = 3,
-				 out_channels: Optional[List[int]] = None):
+				 out_channels: Optional[List[int]] = None,
+				 linear_sizes: Optional[List[int]] = None):
 		"""
 		Constructor for objects of class ResNetOutlierDetectionModel.
 
@@ -113,6 +114,9 @@ class ResNet(torch.nn.Module):
 			out_channels = out_channels + [out_channels[-1] for i in range(
 				4 - len(out_channels))]
 
+		if linear_sizes is None:
+			linear_sizes = [256, 64]
+
 		self.stem = nn.Sequential(
 			nn.Conv2d(in_channels, out_channels[0], kernel_size=3, stride=1,
 				padding='same', bias=False),
@@ -132,11 +136,11 @@ class ResNet(torch.nn.Module):
 		self.layer4 = self.make_resnet_layer(3, out_channels[2], out_channels[3],
 			num_blocks[3], 2)
 
-		self.avg_pool = nn.AdaptiveAvgPool2d((1, 1))
+		self.avg_pool = nn.AdaptiveAvgPool2d((2, 1))
 		self.projection_head = nn.Sequential(
-			nn.Linear(out_channels[3], 128),
+			nn.Linear(2 * out_channels[3], linear_sizes[0]),
 			nn.ReLU(),
-			nn.Linear(128, 32)
+			nn.Linear(linear_sizes[0], linear_sizes[1])
 		)
 
 		self._use_projection_head = True

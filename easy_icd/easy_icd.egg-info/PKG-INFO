@@ -1,14 +1,15 @@
-Metadata-Version: 2.1
+Metadata-Version: 1.1
 Name: easy-icd
 Version: 0.0.1
-Summary: A small example package
-Author-email: Sashwat Anagolum <sashwat.anagolum@gmail.com>
-Project-URL: Homepage, https://github.com/SashwatAnagolum/Easy-ICD
+Summary: Easy-ICD
+Home-page: UNKNOWN
+Author: Sashwat Anagolum
+Author-email: sashwat.anagolum@gmail.com
+License: UNKNOWN
+Description: Easily create image classification datasets
+Keywords: python
+Platform: UNKNOWN
+Classifier: Development Status :: 3 - Alpha
 Classifier: Programming Language :: Python :: 3
-Classifier: License :: OSI Approved :: MIT License
-Classifier: Operating System :: OS Independent
-Requires-Python: >=3.7
-Description-Content-Type: text/markdown
-License-File: LICENSE
-
-# Easy-ICD: Automatic scraping and denoising of image classification datasets
+Classifier: Operating System :: MacOS :: MacOS X
+Classifier: Operating System :: Microsoft :: Windows
