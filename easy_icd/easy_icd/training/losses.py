@@ -3,9 +3,28 @@ import torch.nn as nn
 
 from typing import Optional
 
+class CELoss(nn.Module):
+	def __init__(self):
+		super(CELoss, self).__init__()
+
+		self.loss_fn = nn.CrossEntropyLoss(reduction='mean')
+
+	def forward(self, predictions, labels):
+		original_batch_size = labels.shape[0]
+		num_samples = predictions.shape[0]
+		num_views = num_samples // original_batch_size
+
+		labels = labels.repeat(num_views)
+
+		return self.loss_fn(predictions, labels)
+
+
 class SimCLRLoss(nn.Module):
 	def __init__(self, temperature: Optional[float] = 0.07,
-				 normalize_features: Optional[bool] = True):
+				 normalize_features: Optional[bool] = True,
+				 reduce_mean: Optional[bool] = True,
+				 use_labels: Optional[bool] = True,
+				 only_pairwise_loss: Optional[bool] = False):
 		"""
 		Constructor for SimCLRLoss objects.
 
@@ -22,6 +41,9 @@ class SimCLRLoss(nn.Module):
 
 		self.temperature = temperature
 		self.normalize_features = normalize_features
+		self.reduce_mean = reduce_mean
+		self.use_labels = use_labels
+		self.only_pairwise_loss = only_pairwise_loss
 
 	def forward(self, features: torch.Tensor, labels: Optional[torch.Tensor] = None) ->\
 				torch.Tensor:
@@ -44,11 +66,21 @@ class SimCLRLoss(nn.Module):
 		Returns:
 			The mean constrastive loss for the minibatch.
 		"""
-		batch_size = features.shape[0]
-		num_views = features.shape[1]
-		num_samples = batch_size * num_views
-
 		device = torch.device('cuda' if features.is_cuda else 'cpu')
+
+		batch_size = labels.shape[0]
+		num_samples = features.shape[0]
+		num_views = num_samples // batch_size
+
+		features = torch.stack(torch.split(features,
+			[batch_size for i in range(num_views)], 0), 1)
+
+		if self.normalize_features:
+			features = torch.div(features, torch.linalg.norm(features, dim=2,
+				keepdim=True))
+	
+		flattened_features = torch.cat(torch.unbind(features, dim=1), dim=0)
+		feature_similarities = torch.matmul(flattened_features, flattened_features.T)
 
 		no_self_similarity_mask = torch.ones((num_samples, num_samples),
 			dtype=torch.float32).to(device)
@@ -57,47 +89,47 @@ class SimCLRLoss(nn.Module):
 			torch.eye(num_samples, dtype=torch.float32).to(device))
 
 		numerator_mask = torch.eye(batch_size, dtype=torch.float32).to(device)
-
-		denominator_mask = torch.ones((num_samples, num_samples)).to(device)
-		denominator_mask = torch.mul(denominator_mask, no_self_similarity_mask)
-
-		if labels is not None:
-			labels = labels.view(-1, 1)
-			labels_same_filter = torch.eq(labels, labels.T).float().to(device)
-
-			labels_same_filter = torch.sub(labels_same_filter,
-				numerator_mask).repeat(num_views, num_views)
-
-			denominator_mask = torch.sub(denominator_mask, labels_same_filter)
-
 		numerator_mask = torch.mul(numerator_mask.repeat(num_views, num_views),
 			no_self_similarity_mask)
 
-		if self.normalize_features:
-			features = torch.div(features, torch.linalg.norm(features, dim=2,
-				keepdim=True))
-	
-		flattened_features = torch.cat(torch.unbind(features, dim=1), dim=0)
-		feature_similarities = torch.divide(torch.matmul(
-			flattened_features, flattened_features.T), self.temperature)
-
+		feature_similarities = torch.div(feature_similarities, self.temperature)
 		max_similarities = torch.max(feature_similarities, dim=1,
 			keepdim=True)[0].detach()
 
 		feature_similarities = torch.sub(feature_similarities, max_similarities)
-
 		all_similarities = torch.mul(torch.exp(feature_similarities),
 			no_self_similarity_mask)
 
-		numerator_similarities = torch.mul(numerator_mask, all_similarities).sum(1)
-		denominator_similarities = torch.mul(denominator_mask, all_similarities).sum(1)
+		if not self.only_pairwise_loss:
+			numerator_similarities = torch.mul(numerator_mask, all_similarities).sum(1)
 
-		view_softmax_probs = torch.div(numerator_similarities, denominator_similarities)
+			denominator_mask = torch.ones((num_samples, num_samples)).to(device)
+			denominator_mask = torch.mul(denominator_mask, no_self_similarity_mask)
 
-		losses = torch.log(view_softmax_probs)
-		mean_loss = torch.mul(torch.mean(losses), -1)
+			if (labels is not None) and self.use_labels:
+				labels = labels.view(-1, 1)
+				labels_same_filter = torch.eq(labels, labels.T).float().to(device)
 
-		return mean_loss
+				labels_same_filter = torch.sub(labels_same_filter,
+					numerator_mask).repeat(num_views, num_views)
+
+				denominator_mask = torch.sub(denominator_mask, labels_same_filter)
+
+			denominator_similarities = torch.mul(denominator_mask,
+				all_similarities).sum(1)
+
+			view_softmax_probs = torch.div(numerator_similarities,
+				denominator_similarities)
+
+			loss = torch.mul(torch.log(view_softmax_probs), -1)
+		else:
+			similarities = torch.mul(numerator_mask, all_similarities).sum(1)
+			loss = torch.mul(torch.log(similarities), -1)
+
+		if self.reduce_mean:
+			loss = torch.mean(loss)
+
+		return loss
 
 
 class SupConLoss(nn.Module):

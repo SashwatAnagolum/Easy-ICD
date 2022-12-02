@@ -82,37 +82,36 @@ class ResNetBasicBlock(torch.nn.Module):
 
 class ResNet(torch.nn.Module):
 	"""
-	Build ResNet-based outlier detection models.
+	Build ResNet-based models.
 	"""
-	def __init__(self, num_blocks: Optional[List[int]] = None,
+	def __init__(self, num_layers: Optional[int] = 4,
+				 num_blocks: Optional[List[int]] = None,
 				 in_channels: Optional[int] = 3,
 				 out_channels: Optional[List[int]] = None,
-				 linear_sizes: Optional[List[int]] = None):
+				 linear_sizes: Optional[List[int]] = None,
+				 supervised: Optional[bool] = False):
 		"""
 		Constructor for objects of class ResNetOutlierDetectionModel.
 
 		Args:
+			num_layers: int indicating the number of resnet layers to use. Can only be
+				3 or 4. Defaults to 4.
 			num_blocks: List of ints indicating the number of ResNet blocks in each
 				of the four layers to use. Defaults to [1, 1, 1, 1].
 			in_channels: int indicating the number of input channels in the data to be
 				learnt. Defaults to 3.
 			out_channels: List of ints indicating the number of output channels for 
 				each of the four ResNet layers. Defaults to [16, 32, 64, 128].
+			supervised: bool indicating whether the model will be used for supervised
+				learning or not. 
 		"""
 		super(ResNet, self).__init__()
 
 		if num_blocks is None:
-			num_blocks = [1, 1, 1, 1]
-		elif len(num_blocks) != 4:
-			num_blocks = num_blocks[:4] + [1 for i in range(4 - min(4, len(num_blocks)))]
+			num_blocks = [2, 2, 2, 2]
 
 		if out_channels is None:
 			out_channels = [16, 32, 64, 128]
-		elif len(out_channels) > 4:
-			out_channels = out_channels[:4]
-		elif len(out_channels) < 4:
-			out_channels = out_channels + [out_channels[-1] for i in range(
-				4 - len(out_channels))]
 
 		if linear_sizes is None:
 			linear_sizes = [256, 64]
@@ -131,17 +130,35 @@ class ResNet(torch.nn.Module):
 			num_blocks[1], 2)
 
 		self.layer3 = self.make_resnet_layer(2, out_channels[1], out_channels[2],
-			num_blocks[2], 2)
+						num_blocks[2], 2)
 
-		self.layer4 = self.make_resnet_layer(3, out_channels[2], out_channels[3],
-			num_blocks[3], 2)
+		if num_layers == 3:
+			self.layer4 = nn.Identity()
+		else:
+			if num_layers != 4:
+				print('Only 3 or 4 layers currently supported! Current choice for',
+					f'number of layers {num_layers} is invalid. Defaulting to 4 layers.')
+
+			self.layer4 = self.make_resnet_layer(3, out_channels[2], out_channels[3],
+				num_blocks[3], 2)
 
 		self.avg_pool = nn.AdaptiveAvgPool2d((2, 1))
-		self.projection_head = nn.Sequential(
-			nn.Linear(2 * out_channels[3], linear_sizes[0]),
-			nn.ReLU(),
-			nn.Linear(linear_sizes[0], linear_sizes[1])
-		)
+
+		if not supervised:
+			self.linear_layers = nn.Identity()
+
+			self.projection_head = nn.Sequential(
+				nn.Linear(2 * out_channels[num_layers - 1], linear_sizes[0]),
+				nn.ReLU(),
+				nn.Linear(linear_sizes[0], linear_sizes[1])
+			)
+		else:
+			linear_sizes.insert(0, 2 * out_channels[num_layers - 1])
+			self.linear_layers = self.make_linear_layers(
+				linear_sizes[:-1])
+
+			self.projection_head = nn.Linear(linear_sizes[-2],
+				linear_sizes[-1])
 
 		self._use_projection_head = True
 
@@ -185,6 +202,18 @@ class ResNet(torch.nn.Module):
 
 		return nn.Sequential(*layer_blocks) 
 
+	def make_linear_layers(self, linear_layer_sizes):
+		linear_layers = []
+
+		for i in range(len(linear_layer_sizes) - 1):
+			linear_layers.append(nn.Linear(linear_layer_sizes[i],
+				linear_layer_sizes[i + 1]))
+
+			if i != (len(linear_layer_sizes) - 2):
+				linear_layers.append(nn.ReLU())
+
+		return nn.Sequential(*linear_layers)
+
 	def use_projection_head(self, use_or_not: bool):
 		"""
 		Whether to use the projection head or not. The projection head is used during
@@ -198,7 +227,7 @@ class ResNet(torch.nn.Module):
 
 	def forward(self, x: torch.Tensor):
 		"""
-		Forward pass of the block.
+		Forward pass of the model.
 
 		Args:
 			x: torch.Tensor of input data.

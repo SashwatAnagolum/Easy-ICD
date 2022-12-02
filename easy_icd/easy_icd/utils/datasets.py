@@ -38,7 +38,7 @@ class EasyICDDataset(Dataset):
 				class_scraping_info_raw = open(os.path.join(
 					self.class_dirs[i], 'class_scraping_info.json')).read()
 
-				class_scraping_info = json.loads(scraping_info_raw)
+				class_scraping_info = json.loads(class_scraping_info_raw)
 
 				self.num_images_per_class.append(
 					class_scraping_info['num_saved_images'])
@@ -68,7 +68,8 @@ class EasyICDDataset(Dataset):
 		"""
 		return self.cum_num_images_per_class[-1]
 
-	def __getitem__(self, idx: int) -> Tuple[torch.Tensor, int]:
+	def __getitem__(self, idx: int,
+					get_img_num: Optional[bool] = False) -> Tuple[torch.Tensor, int]:
 		"""
 		Get an image - label pair.
 		"""
@@ -92,7 +93,10 @@ class EasyICDDataset(Dataset):
 		if self.target_transform:
 			label = self.target_transform(label)
 			
-		return image, label
+		if get_img_num:
+			return image, [label, image_number]
+		else:
+			return image, label
 	
 	def get_label_to_class_mapping(self) -> Dict:
 		"""

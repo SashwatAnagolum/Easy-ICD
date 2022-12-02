@@ -4,4 +4,5 @@ old/
 .ipynb_checkpoints/
 notebooks/
 ideas.txt
-.gitignore
+.gitignore\
+presentatio_and_report/
