@@ -37,9 +37,9 @@ class RandomImageAugmenter():
 			RandomVerticalFlip(p=1),
 			RandomGrayscale(p=1),
 			RandomErasing(p=1, scale=(0.01, 0.15)),
-			ColorJitter(0.1, 0.1, 0.1, 0.1),
-			GaussianBlur(3, (0.05, 0.5)),
-			RandomResizedCrop(output_image_size, (0.8, 1)),
+			ColorJitter(0.25, 0.25, 0.25, 0.1),
+			GaussianBlur(5, (0.05, 1)),
+			RandomResizedCrop(output_image_size, (0.7, 1)),
 			RandomRotation(15)]
 
 		self.num_transforms = len(self.transforms)       	
@@ -81,7 +81,7 @@ class RandomImageAugmenter():
 
 
 def augment_minibatch(minibatch: torch.Tensor, augmenter: RandomImageAugmenter,
-					  num_augments: int) -> torch.Tensor:
+					  num_augments: int, device: torch.device) -> torch.Tensor:
 	"""
 	Augment a minibatch of images and return a multi-viewed batch of images.
 
@@ -91,6 +91,7 @@ def augment_minibatch(minibatch: torch.Tensor, augmenter: RandomImageAugmenter,
 		num_augments: int representing the number of times to augment the images.
 			The returned minibatch size will be (1 + num_augments) * original_bsz,
 			where original_bsz is the original batch size of the minibatch.
+		device: torch.device on which the tensors must be stored.
 
 	Returns:
 		A multi-viewed batch of images.
@@ -100,4 +101,4 @@ def augment_minibatch(minibatch: torch.Tensor, augmenter: RandomImageAugmenter,
 	for i in range(num_augments):
 		augmented_minibatch.append(augmenter.augment(minibatch))
 
-	return torch.cat(augmented_minibatch, 0)
+	return torch.cat(augmented_minibatch, 0).to(device)

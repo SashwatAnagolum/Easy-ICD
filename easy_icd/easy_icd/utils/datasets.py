@@ -21,7 +21,8 @@ class EasyICDDataset(Dataset):
 				 image_transform: Optional[Callable] = None,
 				 target_transform: Optional[Callable] = None,
 				 scale_images: Optional[bool] = False,
-				 image_indices: Optional[List[np.ndarray]] = None) -> None:
+				 image_indices: Optional[List[np.ndarray]] = None,
+				 get_indices: Optional[bool] = False) -> None:
 		"""
 		Constructor for EasyICD dataset objects.
 		"""
@@ -38,7 +39,7 @@ class EasyICDDataset(Dataset):
 				class_scraping_info_raw = open(os.path.join(
 					self.class_dirs[i], 'class_scraping_info.json')).read()
 
-				class_scraping_info = json.loads(scraping_info_raw)
+				class_scraping_info = json.loads(class_scraping_info_raw)
 
 				self.num_images_per_class.append(
 					class_scraping_info['num_saved_images'])
@@ -57,6 +58,7 @@ class EasyICDDataset(Dataset):
 		self.scale_images = scale_images
 		self.image_transform = image_transform
 		self.target_transform = target_transform
+		self.get_indices = get_indices
 
 		if self.scale_images:
 			scaler_func = lambda x: torch.divide(x, 255)
@@ -92,7 +94,10 @@ class EasyICDDataset(Dataset):
 		if self.target_transform:
 			label = self.target_transform(label)
 			
-		return image, label
+		if self.get_indices:
+			return image, [label, image_number]
+		else:
+			return image, label
 	
 	def get_label_to_class_mapping(self) -> Dict:
 		"""
@@ -123,15 +128,22 @@ def get_one_hot_transform(num_classes: int) -> torch.Tensor:
 def create_dataset(image_dir: str, class_names: Optional[List[str]] = None,
 				   one_hot_labels: Optional[bool] = False,
 				   scale_images: Optional[bool] = False,
-				   train_test_split_ratio: Optional[float] = 1.0) -> EasyICDDataset:
+				   train_test_split_ratio: Optional[float] = 1.0,
+				   cleaned: Optional[bool] = False,
+				   invalid_file_name: Optional[str] = '',
+				   get_indices: Optional[bool] = False) -> EasyICDDataset:
 	"""
-	Create dataset:
 	Create an EasyICD dataset from the images scraped using easy_icd.scraping
 	functions.
+
+	Args:
+		image_dir: str representing the folder 
 	"""
 	if class_names is None:
 		class_names = [i for i in os.listdir(image_dir) if os.path.isdir(
 			os.path.join(image_dir, i))]
+	else:
+		class_names = [c.replace(' ', '_') for c in class_names]
 
 	num_classes = len(class_names)
 		
@@ -141,7 +153,10 @@ def create_dataset(image_dir: str, class_names: Optional[List[str]] = None,
 		target_transform = None
 		
 	image_transform = None
-	
+
+	if invalid_file_name != '':
+		invalid_file_name = '_' + invalid_file_name
+
 	if train_test_split_ratio < 1.0:
 		train_inds = []
 		test_inds = []
@@ -152,25 +167,37 @@ def create_dataset(image_dir: str, class_names: Optional[List[str]] = None,
 
 			class_scraping_info = json.loads(class_scraping_info_raw)
 			num_images_in_class = class_scraping_info['num_saved_images']
-			num_train_images = int(train_test_split_ratio * num_images_in_class)
 
-			sel_inds = np.zeros(num_images_in_class).astype(bool)
-			sel_inds[np.random.choice(num_images_in_class,
+			curr_valid_inds = np.arange(num_images_in_class)
+
+			if cleaned:
+				class_invalid_inds = (np.load(os.path.join(image_dir, class_names[i],
+							f'invalid_inds{invalid_file_name}.npy')))
+
+				valid_flags = np.ones(num_images_in_class).astype(bool)
+				valid_flags[class_invalid_inds] = False
+				curr_valid_inds = curr_valid_inds[valid_flags]
+
+			num_valid_images = len(curr_valid_inds)
+			num_train_images = int(train_test_split_ratio * num_valid_images)
+
+			sel_inds = np.zeros(num_valid_images).astype(bool)
+			sel_inds[np.random.choice(num_valid_images,
 				num_train_images, False)] = True
 
 			train_inds.append(np.argwhere(sel_inds).flatten())
 			test_inds.append(np.argwhere(np.invert(sel_inds)).flatten())		
 
 		train_dataset = EasyICDDataset(image_dir, class_names, image_transform,
-			target_transform, scale_images, train_inds)
+			target_transform, scale_images, train_inds, get_indices)
 
 		test_dataset = EasyICDDataset(image_dir, class_names, image_transform,
-			target_transform, scale_images, test_inds)
+			target_transform, scale_images, test_inds, get_indices)
 
 		return train_dataset, test_dataset
 	else:
 		dataset = EasyICDDataset(image_dir, class_names, image_transform,
-			target_transform, scale_images)
+			target_transform, scale_images, get_indices=get_indices)	
 	
 		return dataset
 
