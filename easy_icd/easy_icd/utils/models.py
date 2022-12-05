@@ -6,7 +6,8 @@ from typing import Optional, Tuple, List, Union
 
 class LinearClassifier(torch.nn.Module):
 	"""
-	Build a linear classifer using the features learnt by another model.
+	Build a linear classifer using the features learnt by another supervised 
+	model.
 	"""
 	def __init__(self, trained_model: torch.nn.Module, in_size: int,
 				 num_classes: int):
@@ -15,8 +16,19 @@ class LinearClassifier(torch.nn.Module):
 		"""
 		super(LinearClassifier, self).__init__()
 
-		self.layer = nn.Sequential(nn.Linear(in_size, num_classes))
+		self.layer = nn.Linear(in_size, num_classes)
 		self.trained_model = trained_model
+		self.trained_model.eval()
+		self.trained_model.use_projection_head(False)
+		self.trained_model.requires_grad_(False)
+
+	def finetune(self, finetune_or_not: bool):
+		self.trained_model.requires_grad_(finetune_or_not)
+
+		if finetune_or_not:
+			self.trained_model.train()
+		else:
+			self.trained_model.eval()
 
 	def forward(self, x):
 		"""
@@ -27,10 +39,9 @@ class LinearClassifier(torch.nn.Module):
 			x: input data.
 
 		Returns:
-			Torch.tensor of model output.
+			Torch.tensor of class probabilities.
 		"""
-		with torch.no_grad():
-			features = self.trained_model(x)
+		features = self.trained_model(x)
 
 		return self.layer(features)
 
@@ -160,6 +171,8 @@ class ResNet(torch.nn.Module):
 			self.projection_head = nn.Linear(linear_sizes[-2],
 				linear_sizes[-1])
 
+			print(self.projection_head)
+
 		self._use_projection_head = True
 
 		for module in self.modules():
@@ -206,6 +219,7 @@ class ResNet(torch.nn.Module):
 		linear_layers = []
 
 		for i in range(len(linear_layer_sizes) - 1):
+			print(linear_layer_sizes[i], linear_layer_sizes[i + 1])
 			linear_layers.append(nn.Linear(linear_layer_sizes[i],
 				linear_layer_sizes[i + 1]))
 
@@ -242,6 +256,7 @@ class ResNet(torch.nn.Module):
 		out = self.layer4(out)
 		out = self.avg_pool(out)
 		out = torch.flatten(out, 1)
+		out = self.linear_layers(out)
 
 		if self._use_projection_head:
 			out = self.projection_head(out)

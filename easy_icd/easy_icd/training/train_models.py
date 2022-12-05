@@ -70,7 +70,12 @@ def compute_test_loss_and_accuracy(model: torch.nn.Module, test_dataloader: Data
 
 		original_batch_size = labels.shape[0]
 
-		augmented_minibatch = augment_minibatch(images, augmenter, num_augments, device)
+		if loss_type == 'simclr':
+			augmented_minibatch = augment_minibatch(images, augmenter,
+				num_augments, device)
+		elif loss_type == 'ce':
+			augmented_minibatch = images
+
 		augmented_minibatch = normalizer(augmented_minibatch)
 
 		features = model(augmented_minibatch)
@@ -207,7 +212,8 @@ def train_model(model: torch.nn.Module, dataloader: DataLoader,
 		num_warmup_epochs: Optional[int] = 0, losses_name: Optional[str] = '',
 		gpu: Optional[bool] = False, epoch_offset: Optional[int] = 0,
 		dataset_means_and_stds: Optional[List[List[float]]] = None,
-		simclr_use_labels: Optional[bool] = True) -> List:
+		simclr_use_labels: Optional[bool] = True,
+		num_stat_counts: Optional[int] = 50) -> List:
 	"""
 	Train an outlier detector.
 
@@ -245,6 +251,8 @@ def train_model(model: torch.nn.Module, dataloader: DataLoader,
 			compute_dataset_means_and_stds parameter. Defaults to None.
 		simclr_use_labels: bool indicating whether to use labels with the 
 			SimCLR loss or not. Defaults to True.
+		num_stat_counts: int indicating how many minibatches to average
+			dataset statistic over if computed.
 	"""
 	if optimizer is None:
 		optimizer = SGD(model.parameters(), lr=lr, momentum=0.9)
@@ -256,7 +264,7 @@ def train_model(model: torch.nn.Module, dataloader: DataLoader,
 
 	if dataset_means_and_stds is None:
 		if compute_dataset_means_and_stds:
-			means, stds = compute_dataset_stats(dataloader, 50)
+			means, stds = compute_dataset_stats(dataloader, num_stat_counts)
 			print(f'Estimated statistics for channels:\nMeans: {means}\nStd dev.: {stds}')
 		else:
 			means = [0.5, 0.5, 0.5]

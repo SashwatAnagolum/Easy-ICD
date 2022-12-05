@@ -35,7 +35,9 @@ def compute_sample_hardness(model: nn.Module, class_dataloader: DataLoader,
 			batch_size = labels.shape[0]
 
 			for i in range(num_loss_samples):
-				augmented_images = augment_minibatch(images, augmenter, num_augments, device)
+				augmented_images = augment_minibatch(images, augmenter, num_augments,
+					device)
+
 				features = model(normalizer(augmented_images))
 				losses = loss_fn(features, labels)[:batch_size]
 
@@ -48,9 +50,10 @@ def compute_sample_hardness(model: nn.Module, class_dataloader: DataLoader,
 
 
 def compute_sample_proximity_and_redundancy(model, class_dataloader,
-									        normalizer, device):
+									        normalizer, device, batch_size):
 	sample_redundancies = []
 	sample_proximities = []
+	sample_redundant_pairs = []
 
 	with torch.no_grad():
 		for idx, (images, labels) in enumerate(class_dataloader):
@@ -65,20 +68,24 @@ def compute_sample_proximity_and_redundancy(model, class_dataloader,
 			upper_similarities = torch.sub(torch.triu(similarities),
 				2 * torch.eye(curr_batch_size).to(device))
 
-			curr_sample_redundancies, _ = torch.max(upper_similarities, dim=1)
-			curr_sample_redundancies = curr_sample_redundancies.cpu().detach().numpy()
+			curr_sample_redundancies, curr_redundant_pairs = torch.max(
+				upper_similarities, dim=1)
 
-			curr_sample_proximities = torch.mean(similarities, dim=1)
-			_, minibatch_centroid_ind = torch.max(curr_sample_proximities, dim=0)
-			curr_sample_proximities = similarities[minibatch_centroid_ind].cpu()
+			curr_sample_redundancies = curr_sample_redundancies.cpu().detach().numpy()
+			curr_redundant_pairs = curr_redundant_pairs.cpu().detach().numpy()
+			curr_redundant_pairs += batch_size * idx
+
+			curr_sample_proximities = torch.mean(similarities, dim=1).cpu()
 
 			sample_redundancies.append(curr_sample_redundancies)
+			sample_redundant_pairs.append(curr_redundant_pairs)
 			sample_proximities.append(curr_sample_proximities.detach().numpy())
 
 	sample_proximities = np.concatenate(sample_proximities)
 	sample_redundancies = np.concatenate(sample_redundancies)
+	sample_redundant_pairs = np.concatenate(sample_redundant_pairs)
 
-	return sample_proximities, sample_redundancies
+	return sample_proximities, sample_redundancies, sample_redundant_pairs
 
 
 def analyze_data(model, data_dir, class_names, dataset_means_and_stds,
@@ -119,16 +126,28 @@ def analyze_data(model, data_dir, class_names, dataset_means_and_stds,
 			class_dir, 'class_scraping_info.json'),
 			'r').read())['num_saved_images']
 
-		batch_size = min(class_num_samples, 256)
+		batch_size = min(class_num_samples, 512)
 		class_dataloader = DataLoader(class_dataset, batch_size=batch_size,
 			shuffle=False)
 
 		hardness_scores = compute_sample_hardness(model, class_dataloader,
 			augmenter, 2, num_loss_samples, loss_fn, normalizer, device)
 
-		proximity_scores, redundancy_scores = compute_sample_proximity_and_redundancy(
-			model, class_dataloader, normalizer, device)
+		proximity_scores, redundancy_scores, redundant_pairs =\
+			compute_sample_proximity_and_redundancy(model, class_dataloader, normalizer,
+				device, batch_size)
+
+		hardness_scores -= np.min(hardness_scores)
+		hardness_scores /= np.max(hardness_scores)
+
+		proximity_scores -= np.min(proximity_scores)
+		proximity_scores /= np.max(proximity_scores)
+
+		redundancy_scores = 1 - redundancy_scores
+		redundancy_scores -= np.min(redundancy_scores)
+		redundancy_scores /= np.max(redundancy_scores)
 
 		np.save(os.path.join(class_dir, 'hardness_scores.npy'), hardness_scores)
 		np.save(os.path.join(class_dir, 'proximity_scores.npy'), proximity_scores)
 		np.save(os.path.join(class_dir, 'redundancy_scores.npy'), redundancy_scores)
+		np.save(os.path.join(class_dir, 'redundant_pairs.npy'), redundant_pairs)

@@ -108,11 +108,10 @@ class SimCLRLoss(nn.Module):
 
 			if (labels is not None) and self.use_labels:
 				labels = labels.view(-1, 1)
-				labels_same_filter = torch.eq(labels, labels.T).float().to(device)
+				labels_same_filter = torch.eq(labels, labels.T).float().to(
+					device).repeat(num_views, num_views)
 
-				labels_same_filter = torch.sub(labels_same_filter,
-					numerator_mask).repeat(num_views, num_views)
-
+				labels_same_filter = torch.sub(labels_same_filter, numerator_mask)
 				denominator_mask = torch.sub(denominator_mask, labels_same_filter)
 
 			denominator_similarities = torch.mul(denominator_mask,

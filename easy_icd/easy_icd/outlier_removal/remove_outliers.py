@@ -1,5 +1,6 @@
 import numpy as np
 import os
+import json
 
 from typing import List, Optional
 
@@ -23,36 +24,23 @@ def remove_outliers(data_dir: str, class_names: List[str],
 	for idx, class_name in enumerate(class_names):
 		class_dir = os.path.join(data_dir, class_name)
 
-		hardness_scores = np.load(os.path.join(class_dir, 'hardness_scores.npy'))
-		proximity_scores = np.load(os.path.join(class_dir, 'proximity_scores.npy'))
-		redundancy_scores = np.load(os.path.join(class_dir, 'redundancy_scores.npy'))
+		num_samples = json.loads(open(os.path.join(
+			class_dir, 'class_scraping_info.json'),
+			'r').read())['num_saved_images']
 
-		num_samples = hardness_scores.shape[0]
 		num_images_to_eliminate = num_samples - num_desired_images[idx]
 
 		if num_images_to_eliminate == 0:
 			continue
-		else:
-			proximity_elimination = num_images_to_eliminate // 2
-			redundancy_elimination = (num_images_to_eliminate - proximity_elimination)
-			redundancy_elimination = 2 * redundancy_elimination // 3
-			hardness_elimination = num_images_to_eliminate - (
-				proximity_elimination + redundancy_elimination)
 
-			elimination_inds = []
+		hardness_scores = np.load(os.path.join(class_dir, 'hardness_scores.npy'))
+		proximity_scores = np.load(os.path.join(class_dir, 'proximity_scores.npy'))
+		redundancy_scores = np.load(os.path.join(class_dir, 'redundancy_scores.npy'))
 
-			proximity_ranks = np.argsort(proximity_scores)
-			elimination_inds.append(proximity_ranks[:proximity_elimination])
+		composite_scores = np.multiply(np.multiply(
+			redundancy_scores, proximity_scores), hardness_scores)
 
-			remaining = proximity_ranks[proximity_elimination:]
+		elimination_inds = np.argsort(composite_scores)[:num_images_to_eliminate]
 
-			redundancy_ranks = remaining[np.argsort(redundancy_scores[remaining])]
-			elimination_inds.append(redundancy_ranks[::-1][:redundancy_elimination])
-
-			remaining = redundancy_ranks[::-1][redundancy_elimination:]
-
-			hardness_ranks = remaining[np.argsort(hardness_scores[remaining])]
-			elimination_inds.append(hardness_ranks[::-1][:hardness_elimination])
-
-			np.save(os.path.join(class_dir, f'invalid_inds{file_name}.npy'),
-				np.concatenate(elimination_inds))
+		np.save(os.path.join(class_dir, f'invalid_inds{file_name}.npy'),
+			elimination_inds)
