@@ -1,3 +1,7 @@
+"""
+Author: Sashwat Anagolum
+"""
+
 import flickrapi
 import requests
 import io
@@ -17,12 +21,21 @@ def scrape_images_with_search_term(flickr_handle: Any, search_term: str,
 	                               image_size: Optional[Tuple[int, int]] = None,
 	                               crop_to_fit: Optional[bool] = False) -> Dict:
 	"""
-	Scrape images with search term:
-	Scrape images from the results of a Flicker search using the passed in search
-	term until num_desired_images have been saved or there are no more search 
-	results. Users can optionally specify an image_size that all scraped images
-	are resized to before saving, and specify whether the image should be resized
-	and cropped to fit the desired size, or resized and padded.
+	Scrape images from flickr by searching for a specified search term.
+
+	Args:
+		flickr_handle (Any): handle to the flickr API.
+		search_term (str): the search term to scrape images based on.
+		num_desired_images (int): the maximum number of images to scrape.
+		image_dir (str): the folder to store the scraped images.
+		image_size (tuple): the size of the images to be stored. Defaults to None,
+			in which case the images are stored without resizing.
+		crop_to_fit (bool, optional): bool indicating whether the images should be
+			cropped to fit or not. If False, the images will be resized and then
+			padded to fit the desired image size before saving.
+
+	Returns:
+		(dict): summarized scraping results.
 	"""
 	url_string = 'https://live.staticflickr.com/{}/{}_{}.jpg'
 	image_file_name_string = '{}.jpg'
@@ -36,13 +49,13 @@ def scrape_images_with_search_term(flickr_handle: Any, search_term: str,
 	photo_stream = flickr_handle.walk(text=search_term, media='photos',
 		sort='relevance', per_page=500)
 
-	num_saved_images = 0
+	num_saved_images = num_images_scraped_already
 	scraping_time_start = time.time()
 	
 	while (num_saved_images < num_desired_images):
 		try:
 			photo = next(iter(photo_stream))
-		except Exception as e:
+		except StopIteration:
 			break
 
 		photo_secret = photo.get('secret')
@@ -96,13 +109,25 @@ def scrape_images(class_names: List[str], image_dir: Optional[str] = None,
 	              image_size: Optional[Tuple[int, int]] = None,
 	              crop_to_fit: Optional[bool] = False) -> Dict:
 	"""
-	Scrape images:
-	Scrape images using the Flickr API based on the results of Flickr searches
-	using the search terms passed in. Images will be saved in directories given by
-	the class_names. Users can specify mutliple search terms per class in order to 
-	ex. force image diversity or enable cleaner image results, as well as the
-	proportion of images that should come from the  results of each search term for
-	a class.
+	Scrape images using the flickr API.
+
+	Args:
+		class_names (list): class names to scrape images for.
+		image_dir (str): the folder to store images in.
+		class_keywords (list): keywords to search for for every class.
+		images_per_class (list): how many images to scrape for each
+			keyword in each class. Can also specificy a single int per class, in which 
+			case the images scrape per keyword are 0evenly divided across all keywords
+			for a class. Can also specify a single int, in which case the same number
+			of images are scraped for each class.
+		image_size (tuple, optional): desired image side lengths in pixels.
+			Defaults to None, in which case images are not resized before saving.
+		crop_to_fit (bool, optional): bool indicating whether the images should be
+			cropped to fit or not. If False, the images will be resized and then padded
+			to fit the desired image size before saving.
+
+	Returns:
+		(dict): summarized scraping results.
 	"""
 	key = "91c796378356002c5ba8be27758cada5"
 	secret = "fd4f5ab352fa08e8"

@@ -8,3 +8,9 @@
 
 * [A Simple Framework for Contrastive Learning of Visual Representations](https://arxiv.org/abs/2004.11362)
 * [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
+* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
+* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
+* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
+* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
+* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
+* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)

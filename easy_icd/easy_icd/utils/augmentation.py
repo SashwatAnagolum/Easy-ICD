@@ -1,3 +1,7 @@
+"""
+Author: Sashwat Anagolum
+"""
+
 import torch
 import numpy as np
 
@@ -11,24 +15,27 @@ class RandomImageAugmenter():
 	"""
 	Randomly apply image augmentations.
 	"""
-	def __init__(self, output_image_size: Tuple[int, int],
-				 transform_probs: Optional[Union[torch.Tensor, List,
-				 np.ndarray]] = None, min_transforms: Optional[int] = 1) -> None:
+	def __init__(self, output_image_size: Union[int, Tuple[int, int]],
+				 transform_probs: Optional[Union[torch.Tensor, List, np.ndarray]] = None,
+				 min_transforms: Optional[int] = 1) -> None:
 		"""
 		Constructor for RandomImageAugmenter objects.
 
 		Args:
-			output_image_size: tuple (width, height) indicating output image size.
-			transform_probs: Array-like of probabilities for each transformation
-				that could be applied.
-			min_transforms: int representing the minimum number of
-				transformations to apply, default 0.
-			scale_images: bool indicating whether to scale images down to [0, 1]
-				from [0, 255] or not. Default is True.
+			output_image_size (tuple): output image size in pixels.
+			transform_probs (list, optional): probabilities for each transformation
+				that can be applied. Defaults to probability 0.2 for each transformation.
+			min_transforms (int, optional): the minimum number of
+				transformations to apply. Defaults to 0.
+			scale_images (bool, optional): bool indicating whether to scale images
+				down to [0, 1] from [0, 255] or not. Defaults to True.
 		"""
 		if transform_probs is None:
 			transform_probs = [0.1 for i in range(8)]
 		
+		if isinstance(output_image_size, int):
+			output_image_size = (output_image_size, output_image_size)
+
 		self.transform_probs = transform_probs
 		self.output_image_size = output_image_size
 		self.min_transforms = min_transforms
@@ -49,11 +56,10 @@ class RandomImageAugmenter():
 		Randomly apply some transformations to the minibatch of images passed in.
 
 		Args:
-			images: Tensor of dimensions [batch_size, 3, width, height] containing
-				the images to be augmented.
+			images (torch.Tensor): minibatch of images to augment.
 
 		Returns:
-			An augmented copy of the images.
+			(torch.Tensor): an augmented copy of the images.
 		"""
 		applied_transforms = []
 		images_copy = images.clone().detach()
@@ -86,15 +92,16 @@ def augment_minibatch(minibatch: torch.Tensor, augmenter: RandomImageAugmenter,
 	Augment a minibatch of images and return a multi-viewed batch of images.
 
 	Args:
-		minibatch: torch.Tensor representing a minibatch of images.
-		augmenter: RandomImageAugmenter to be used to augment the images.
-		num_augments: int representing the number of times to augment the images.
+		minibatch (torch.Tensor): a minibatch of images.
+		augmenter (RandomImageAugmenter): RandomImageAugmenter to be used to augment 
+			the images.
+		num_augments (int): the number of times to augment the images.
 			The returned minibatch size will be (1 + num_augments) * original_bsz,
 			where original_bsz is the original batch size of the minibatch.
-		device: torch.device on which the tensors must be stored.
+		device (torch.device): device on which the tensors must be stored.
 
 	Returns:
-		A multi-viewed batch of images.
+		(torch.Tensor): a multi-viewed batch of images.
 	"""
 	augmented_minibatch = []
 

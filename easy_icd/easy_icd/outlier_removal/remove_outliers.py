@@ -1,3 +1,7 @@
+"""
+Author: Sashwat Anagolum
+"""
+
 import numpy as np
 import os
 import json
@@ -10,11 +14,12 @@ def remove_outliers(data_dir: str, class_names: List[str],
 	Remove outliers in each class by marking them as invalid.
 
 	Args:
-		data_dir: folder where all the images are stored.
-		class_names: names of the classes to remove outliers for.
-		num_desired_images: int rperesenting the number of images to be kept after
+		data_dir (str): folder where all the images are stored.
+		class_names (list): names of the classes to remove outliers for.
+		num_desired_images (int): the number of images to be kept after
 			outlier removal.
-		file_name: the name of the file to save containing the invalid image indices.
+		file_name (str): the name of the file to save containing the invalid image
+			indices.
 	"""
 	class_names = [class_name.replace(' ', '_') for class_name in class_names]
 

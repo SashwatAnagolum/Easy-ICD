@@ -1,3 +1,7 @@
+"""
+Author: Sashwat Anagolum
+"""
+
 import torch
 import numpy as np
 import os
@@ -14,16 +18,19 @@ from easy_icd.training.early_stopping import EarlyStopper
 from easy_icd.utils.datasets import compute_dataset_stats
 
 def compute_accuracy(predictions: torch.Tensor, labels: torch.Tensor,
-	loss_type: str):
+					 loss_type: str):
 	"""
 	Compute the accuracy of a model.
 
 	Args:
-		predictions: torch.Tensor containing the model predictions.
-		labels: torch.Tensor contianing the ground truth.
-		loss_type: str indicating whether to comptue constrastive accuracy
+		predictions (torch.Tensor): model predictions.
+		labels (torch.Tensor): ground truth.
+		loss_type (str): whether to compute constrastive accuracy
 			or classification accuracy. Currently only supports classification
 			accuracy, so all calls with loss_type == 'simclr' return 0.
+
+	Returns:
+		(float): minibatch accuracy.
 	"""
 	if loss_type == 'ce':
 		original_batch_size = labels.shape[0]
@@ -39,24 +46,30 @@ def compute_accuracy(predictions: torch.Tensor, labels: torch.Tensor,
 
 
 def compute_test_loss_and_accuracy(model: torch.nn.Module, test_dataloader: DataLoader,
-		augmenter: RandomImageAugmenter, num_augments: int, normalizer: Normalize,
-		loss_fn: torch.nn.Module, loss_type: str, device: torch.device) -> torch.Tensor:
+								   augmenter: RandomImageAugmenter, num_augments: int,
+								   normalizer: Normalize, loss_fn: torch.nn.Module,
+								   loss_type: str, device: torch.device) -> torch.Tensor:
 	"""
 	Compute the test loss and accuray for the model over a few minibatches from
 	the test dataset.
 
 	Args:
-		model: torch.nn.Module representing the outlier detector to be trained.
-		test_dataloader: DataLoader that fetches images from a held-out test portion
-			of the dataset to be cleaned.
-		augmenter: the RandomImageAugmenter to be used to augment image minibatches.
-		num_augments: int > 2 representing the number of views to create for each image
+		model (nn.Module): the outlier detector to be trained.
+		test_dataloader (DataLoader): DataLoader that fetches images from a held-out
+			test portion of the dataset to be cleaned.
+		augmenter (RandomImageAugmenter): the RandomImageAugmenter to be used to
+			augment image minibatches.
+		num_augments (int): the number of views to create for each image
 			in a minibatch.
-		normalizer: Normalize transform used to normalize the images.
-		loss_fn: torch.nn.Module representing the loss to be used during
+		normalizer (Normalize): transform used to normalize the images.
+		loss_fn (nn.Module): the loss to be used during
 			training.
-		loss_type: str indicating which type of loss is being computed.
-		device: device that the computation iwll be run on.
+		loss_type (str): which type of loss to compute.
+		device (torch.device): device that the computation will be run on.
+
+	Returns:
+		(float): test set loss
+		(float): test set accuracy
 	"""
 	model.eval()
 
@@ -94,32 +107,33 @@ def compute_test_loss_and_accuracy(model: torch.nn.Module, test_dataloader: Data
 
 
 def train_epoch(model: torch.nn.Module, dataloader: DataLoader,
-		test_dataloader: DataLoader, optimizer: Optimizer,
-		augmenter: RandomImageAugmenter, num_augments: int, normalizer: Normalize,
-		loss_fn: torch.nn.Module, early_stopper: EarlyStopper,
-		save_dir: str, device: torch.device,
-		loss_type: Optional[str] = 'simclr') -> torch.Tensor:
+				test_dataloader: DataLoader, optimizer: Optimizer,
+				augmenter: RandomImageAugmenter, num_augments: int,
+				normalizer: Normalize, loss_fn: torch.nn.Module, 
+				early_stopper: EarlyStopper, save_dir: str, device: torch.device,
+				loss_type: Optional[str] = 'simclr') -> torch.Tensor:
 	"""
 	Train the outlier detector for one epoch.
 
 	Args:
-		model: torch.nn.Module representing the outlier detector to be trained.
-		dataloader: DataLoader that fetches images from the dataset to be cleaned.
-		test_dataloader: DataLoader that fetches images from a held-out test portion
-			of the dataset to be cleaned.
-		optimizer: Optimizer to be used during training.
-		augmenter: the RandomImageAugmenter to be used to augment image minibatches.
-		num_augments: int > 2 representing the number of views to create for each image
+		model (nn.Module): the model to be trained.
+		dataloader (DataLoder): DataLoader that fetches images from the dataset to be
+			cleaned.
+		test_dataloader (DataLoader): DataLoader that fetches images from a held-out
+			test portion of the dataset to be cleaned.
+		optimizer (Optimizer): optimizer to be used during training.
+		augmenter (RandomImageAugmenter): the RandomImageAugmenter to be used to
+			augment image minibatches.
+		num_augments (int): the number of views to create for each image
 			in a minibatch.
-		normalizer: Normalize transform used to normalize the images.
-		loss_fn: torch.nn.Module representing the SimCLR loss to be used during
-			training.
-		early_stopper: EarlyStopper used to check whether we need to stop training
+		normalizer (Normalize): transform used to normalize the images.
+		loss_fn (nn.Module): the loss to be used during training.
+		early_stopper (EarlyStopper): used to check whether we need to stop training
 			to prevent overfitting or not.
-		save_dir: str path to the folder the model needs to be saved in.
+		save_dir (str): path to the folder the model needs to be saved in.
 		device: device that the training will be run on.
-		loss_type: str indicating the kind of los sbeing used. If loss_type is
-			'ce', then the model accuracy will be computed as well.
+		loss_type (str, optional): which type of loss to compute. 'simclr' results in the
+			SimCLR being used. 'ce' will train the model using the cross-entropy loss.
 	"""
 	train_losses = []
 	train_accs = []
@@ -151,8 +165,9 @@ def train_epoch(model: torch.nn.Module, dataloader: DataLoader,
 		optimizer.step()
 
 		if not idx % 10:
-			test_loss, test_acc = compute_test_loss_and_accuracy(model, test_dataloader,
-				augmenter, num_augments, normalizer, loss_fn, loss_type, device)
+			test_loss, test_acc = compute_test_loss_and_accuracy(model,
+				test_dataloader, augmenter, num_augments, normalizer, loss_fn,
+				loss_type, device)
 
 			test_losses.append(test_loss)
 			test_accs.append(test_acc)
@@ -175,14 +190,14 @@ def get_learning_rate_scheduler(max_epochs: int, num_warmup_epochs: int,
 								max_lr: float, min_lr: float):
 	""" 
 	Create a learning rate scheduler that first linearly increases the learning rate
-	for the first max_epochs // 10 epochs, and then reduces it via cosine annealing.
+	for the first few epochs, and then reduces it via cosine annealing.
 
 	Args:
-		max_epochs: int indicating the maximum number of epochs the model
+		max_epochs (int): the maximum number of epochs the model
 			will be trained for.
-		num_warmup_epochs: int indicating the number of warmup epochs.
-		max_lr: float indicating the maximum learning rate.
-		min_lr: float indicating the minimum learning rate.
+		num_warmup_epochs (int): the number of warmup epochs.
+		max_lr (float): the maximum learning rate.
+		min_lr (float): the minimum learning rate.
 	"""
 	min_factor = min_lr / max_lr
 
@@ -191,7 +206,7 @@ def get_learning_rate_scheduler(max_epochs: int, num_warmup_epochs: int,
 		Learning rate scheduler.
 
 		Args:
-			epoch: int indicating the current epoch number.
+			epoch (int): the current epoch number.
 		"""
 		if epoch <= num_warmup_epochs:
 			return min_factor + (1 - min_factor) * (epoch) / num_warmup_epochs
@@ -218,41 +233,43 @@ def train_model(model: torch.nn.Module, dataloader: DataLoader,
 	Train an outlier detector.
 
 	Args:
-		model: torch.nn.Module representing the outlier detector to be trained.
-		dataloader: DataLoader that fetches images from the dataset to be cleaned.
-		test_dataloader: DataLoader that fetches images from a held-out test portion
-			of the dataset to be cleaned.
-		save_dir: the folder to save model checkpoints and loss values in.
-		augmenter: the RandomImageAugmenter to be used to augment image mnibatches.
-		loss_type: str indicating what loss to use for training. 'simclr' results in
-			using the modified SimCLR loss, and 'ce' results in using the standard
-			supervised log loss.
-		num_epochs: int indicating the number of epochs of training. Defaults to 10.
-		optimizer: Optimizer to be used during training. Defaults to SGD with lr 0.01,
-			momentum 0.9.
-		num_augments: int representing the number of views to create for each image
-			in a minibatch. Defaults to 1. 
-		loss_temp: float representing the temperature to be used with the loss function
+		model (nn.Module): the model to be trained.
+		dataloader (DataLoder): DataLoader that fetches images from the dataset to be
+			cleaned.
+		test_dataloader (DataLoader): DataLoader that fetches images from a held-out
+			test portion of the dataset to be cleaned.
+		save_dir (str): path to the folder the model needs to be saved in.
+		augmenter (RandomImageAugmenter): the RandomImageAugmenter to be used to
+			augment image minibatches.
+		loss_type (str, optional): str indicating what loss to use for training.
+			'simclr' results in using the modified SimCLR loss, and 'ce' results in
+			using the standard supervised log loss.
+		num_epochs (int,, optional): the number of epochs of training. Defaults to 10.
+		optimizer (Optimizer, optional): optimizer to be used during training.
+			Defaults to SGD with lr = 0.1 and momentum = 0.9.
+		num_augments (int, optional): the number of views to create for each image
+			in a minibatch.
+		loss_temp (float, optional): the temperature to be used with the loss function
 			for training. Defaults to 0.07. Ignored if the loss_type is 'ce'. 
-		compute_dataset_means_and_std: bool indicating whether to compute
+		compute_dataset_means_and_std (bool): whether to compute
 			the per-channel means and stds over the dataset or not. Defaults to True.
-		lr: float representing the maximum learning rate to be used. Defaults to 0.1.
-		min_lr: float representing the minium learning rate to be used. Defaults to
+		lr (float, optional): the maximum learning rate to be used. Defaults to 0.1.
+		min_lr (float, optional): the minium learning rate to be used. Defaults to
 			1e-3.
-		num_warmup_epochs: int representing the number of epochs to warm up the 
-			learning rate from min_lr to lr.
-		losses_name: str indicating the name of the files in which to save
+		num_warmup_epochs (int, optional): the number of epochs to warm up the 
+			learning rate from min_lr to lr. Defaults to 0.
+		losses_name (str, optional): the name of the files in which to save
 			test and train loss information.
-		gpu: bool indicating whether to run on GPU or CPU. Defaults to True if
-			a GPU is acessible.
-		epoch_offset: int representing the number to start counting epochs from.
-			Defaults to zero.
-		dataset_means_and_stds: statistics of the dataset, overriding the 
-			compute_dataset_means_and_stds parameter. Defaults to None.
-		simclr_use_labels: bool indicating whether to use labels with the 
+		gpu  (bool, optional): bool indicating whether to run on GPU or CPU.
+			Defaults to True if a GPU is acessible.
+		epoch_offset (int, optional): int representing the number to start counting
+			epochs from. Defaults to 0.
+		dataset_means_and_stds (list, optional): statistics of the dataset,
+			overriding the compute_dataset_means_and_stds parameter. Defaults to None.
+		simclr_use_labels (bool, optional): whether to use labels with the 
 			SimCLR loss or not. Defaults to True.
-		num_stat_counts: int indicating how many minibatches to average
-			dataset statistic over if computed.
+		num_stat_counts (int, optional): how many minibatches to average
+			dataset statistics over, if computed.
 	"""
 	if optimizer is None:
 		optimizer = SGD(model.parameters(), lr=lr, momentum=0.9)
@@ -265,7 +282,8 @@ def train_model(model: torch.nn.Module, dataloader: DataLoader,
 	if dataset_means_and_stds is None:
 		if compute_dataset_means_and_stds:
 			means, stds = compute_dataset_stats(dataloader, num_stat_counts)
-			print(f'Estimated statistics for channels:\nMeans: {means}\nStd dev.: {stds}')
+			print('Estimated statistics for channels:')
+			print(f'Means: {means}\nStd dev.: {stds}')
 		else:
 			means = [0.5, 0.5, 0.5]
 			stds = [0.5, 0.5, 0.5]
@@ -320,6 +338,3 @@ def train_model(model: torch.nn.Module, dataloader: DataLoader,
 
 	train_losses_file.close()
 	test_losses_file.close()
-
-	# np.savetxt(os.path.join(save_dir, f'train_losses_{losses_name}.txt'), train_losses)
-	# np.savetxt(os.path.join(save_dir, f'test_losses_{losses_name}.txt'), test_losses)

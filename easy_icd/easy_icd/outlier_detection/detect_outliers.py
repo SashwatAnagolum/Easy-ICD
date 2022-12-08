@@ -1,3 +1,7 @@
+"""
+Author: Sashwat Anagolum
+"""
+
 import torch
 import numpy as np
 import torch.nn as nn
@@ -5,7 +9,7 @@ import json
 import os
 
 from torch.utils.data import DataLoader
-from typing import Optional, List
+from typing import Optional, List, Tuple
 from torchvision.transforms import Normalize
 
 from easy_icd.utils.augmentation import RandomImageAugmenter, augment_minibatch
@@ -13,19 +17,29 @@ from easy_icd.training.losses import SimCLRLoss
 from easy_icd.utils.datasets import create_dataset
 
 def compute_sample_hardness(model: nn.Module, class_dataloader: DataLoader,
-	augmenter: RandomImageAugmenter, num_augments: int, num_loss_samples: int,
-	loss_fn: SimCLRLoss, normalizer: Normalize,
-	device: torch.device) -> torch.Tensor:
+							augmenter: RandomImageAugmenter, num_augments: int,
+							num_loss_samples: int, loss_fn: nn.Module,
+							normalizer: Normalize, device: torch.device) -> torch.Tensor:
 	"""
 	Compute sample 'hardness' via the expected SimCLR Loss over multiple sets of views
 	of a sample.
 
 	Args:
-		model: nn.Module representing the trained model to evaluate.
-		class_dataloader: DataLoader fetching images from the class of interest.
-			Must have shuffle == False, since this function relies on the ordering of 
-			the images being fetched being the same as the ordering of the images in 
-			the folder they are stored in.
+		model (nn.Module): the trained model to use.
+		class_dataloader (DataLoader): DataLoader fetching images from the class of
+			interest. Must have shuffle == False, since this function relies on the
+			ordering of the images being fetched being the same as the ordering of the
+			images in the folder they are stored in.
+		augmenter (RandomImageAugmenter): RandomImageAugmenter used to augment images.
+		num_augments (int): the number of views of each minibatch to pass
+			into the network.
+		num_loss_samples (int): the number of loss values to average over for
+			each sample.
+		loss_fn (nn.Module): the loss function to use.
+		normalizer (Normalize): a transform used to normalize the augmented images.
+		device (torch.device): the device the computation will happen on.
+	Returns:
+		(np.ndarray): sample hardness scores.
 	"""
 	sample_losses = []
 
@@ -49,8 +63,29 @@ def compute_sample_hardness(model: nn.Module, class_dataloader: DataLoader,
 	return np.concatenate(sample_losses)
 
 
-def compute_sample_proximity_and_redundancy(model, class_dataloader,
-									        normalizer, device, batch_size):
+def compute_sample_proximity_and_redundancy(model: nn.Module,
+											class_dataloader: DataLoader,
+									        normalizer: Normalize,
+									        device: torch.device,
+									        batch_size: int):
+	"""
+	Compute the proximity and redundancy of samples within a minibatch.
+
+	Args:
+		model (nn.Module): the trained model to use.
+		class_dataloader (DataLoader): DataLoader fetching images from the class of
+			interest. Must have shuffle == False, since this function relies on the
+			ordering of the images being fetched being the same as the ordering of the
+			images in the folder they are stored in.
+		normalizer (Normalize): a transform used to normalize the augmented images.
+		device (torch.device): the device the computation will happen on.
+		batch_size (int): size of loaded minibatches.
+
+	Returns:
+		(np.ndarray): sample proximity scores
+		(np.ndarray): sample redundancy scores
+		(np.ndarray): sample redundant pair indices
+	"""
 	sample_redundancies = []
 	sample_proximities = []
 	sample_redundant_pairs = []
@@ -88,15 +123,25 @@ def compute_sample_proximity_and_redundancy(model, class_dataloader,
 	return sample_proximities, sample_redundancies, sample_redundant_pairs
 
 
-def analyze_data(model, data_dir, class_names, dataset_means_and_stds,
-		image_size, num_loss_samples: Optional[int] = 10,
-		gpu: Optional[bool] = False) -> None:
+def analyze_data(model: nn.Module, data_dir: str, class_names: List[str],
+				 dataset_means_and_stds: list[List[float]], image_size: Tuple[int, int],
+				 num_loss_samples: Optional[int] = 10, 
+				 gpu: Optional[bool] = False) -> None:
 	"""
-	Analyze the scraped dataset using three steps:
-		1. 
-		2. Identify samples that are highly redundant.
-		3. Identify 'hard' samples that are will teach the model prediction
-			boundaries via expected contrastive loss.
+	Analyze the images in every class of the scraped dataset using intra-class
+	sample proximity, redundancy, and sample hardness.
+
+	Args:
+		model (nn.Module): the trained model to use.
+		data_dir (str): the folder where the dataste is stored.
+		class_names (list): the names of the classes to analyze.
+		dataset_means_and_stds (list): the per-channel
+			means and stds of the images, used for normalization.
+		image_size (tuple): side lengths of the images in pixels.
+		num_loss_samples (int, optional): the number of loss values to average over for
+			each sample. Defaults to 10.
+		gpu (bool, optional): bool indicating whether to use the GPU or not.
+			Defaults to False.
 	"""
 	device = torch.device('cuda' if gpu else 'cpu')
 	model.to(device)
