@@ -23,7 +23,7 @@ def remove_outliers(data_dir: str, class_names: List[str],
 	"""
 	class_names = [class_name.replace(' ', '_') for class_name in class_names]
 
-	if file_name is not '':
+	if file_name != '':
 		file_name = '_' + file_name
 
 	for idx, class_name in enumerate(class_names):

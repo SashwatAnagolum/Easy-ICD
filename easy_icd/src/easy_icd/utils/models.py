@@ -255,7 +255,6 @@ class ResNet(nn.Module):
 		linear_layers = []
 
 		for i in range(len(linear_layer_sizes) - 1):
-			print(linear_layer_sizes[i], linear_layer_sizes[i + 1])
 			linear_layers.append(nn.Linear(linear_layer_sizes[i],
 				linear_layer_sizes[i + 1]))
 

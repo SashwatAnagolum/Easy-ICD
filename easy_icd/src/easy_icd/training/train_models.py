@@ -208,7 +208,7 @@ def get_learning_rate_scheduler(max_epochs: int, num_warmup_epochs: int,
 		Args:
 			epoch (int): the current epoch number.
 		"""
-		if epoch <= num_warmup_epochs:
+		if epoch < num_warmup_epochs:
 			return min_factor + (1 - min_factor) * (epoch) / num_warmup_epochs
 		else:
 			return min_factor + (1 - min_factor) * np.cos(0.5 * np.pi * (
@@ -221,7 +221,7 @@ def train_model(model: torch.nn.Module, dataloader: DataLoader,
 		test_dataloader: DataLoader, save_dir: str, augmenter: RandomImageAugmenter,
 		loss_type: str, num_epochs: Optional[int] = 10,
 		optimizer: Optional[Optimizer] = None,
-		num_augments: Optional[int] = 1, loss_temp: Optional[float] = 0.07,
+		num_augments: Optional[int] = 2, loss_temp: Optional[float] = 0.07,
 		compute_dataset_means_and_stds: Optional[bool] = True,
 		lr: Optional[float] = 0.1, min_lr: Optional[float] = 1e-3,
 		num_warmup_epochs: Optional[int] = 0, losses_name: Optional[str] = '',
@@ -306,10 +306,13 @@ def train_model(model: torch.nn.Module, dataloader: DataLoader,
 	loss_fn = loss_fn.to(device)
 	model = model.to(device)
 
-	train_losses_file = open(os.path.join(save_dir, f'train_losses_{losses_name}.txt'),
+	if losses_name != '':
+		losses_name = '_' + losses_name
+
+	train_losses_file = open(os.path.join(save_dir, f'train_metrics{losses_name}.txt'),
 		'a')
 
-	test_losses_file = open(os.path.join(save_dir, f'test_losses_{losses_name}.txt'),
+	test_losses_file = open(os.path.join(save_dir, f'test_metrics{losses_name}.txt'),
 		'a')
 
 	for epoch_num in range(epoch_offset, num_epochs + epoch_offset):

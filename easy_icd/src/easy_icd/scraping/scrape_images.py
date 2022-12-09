@@ -49,7 +49,7 @@ def scrape_images_with_search_term(flickr_handle: Any, search_term: str,
 	photo_stream = flickr_handle.walk(text=search_term, media='photos',
 		sort='relevance', per_page=500)
 
-	num_saved_images = num_images_scraped_already
+	num_saved_images = 0
 	scraping_time_start = time.time()
 	
 	while (num_saved_images < num_desired_images):
