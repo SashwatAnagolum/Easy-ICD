@@ -1,1 +1,5 @@
-easy_icd
+outlier_detection
+outlier_removal
+scraping
+training
+utils

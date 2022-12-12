@@ -1,10 +1,12 @@
 Metadata-Version: 2.1
 Name: Easy-ICD
-Version: 0.0.1
-Summary: Easy-ICD: easily create image classification datasets
-Author-email: Sashwat Anagolum <sashwat.anagolum@gmail.com>
-Project-URL: Homepage, https://github.com/SashwatAnagolum/Easy-ICD
+Version: 1.0.0
+Summary: Easily create image classification datasets
+Home-page: https://github.com/SashwatAnagolum/Easy-ICD
+Author: Sashwat Anagolum
+Author-email: sashwat.anagolum@gmail.com
 Project-URL: Bug Tracker, https://github.com/SashwatAnagolum/Easy-ICD/issues
+Project-URL: repository, https://github.com/SashwatAnagolum/Easy-ICD
 Classifier: Programming Language :: Python :: 3
 Classifier: License :: OSI Approved :: MIT License
 Classifier: Operating System :: OS Independent
@@ -13,16 +15,3 @@ Description-Content-Type: text/markdown
 License-File: LICENSE
 
 # Easy-ICD: Automatic scraping and denoising of image classification datasets
-
-#### CMPSC 445 Final Project
-	
-## References
-
-* [A Simple Framework for Contrastive Learning of Visual Representations](https://arxiv.org/abs/2004.11362)
-* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
-* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
-* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
-* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
-* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
-* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
-* [Supervised Contrastive Learning](https://arxiv.org/abs/2002.05709)
