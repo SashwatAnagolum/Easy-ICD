@@ -1,22 +1,3 @@
 [build-system]
-requires = ['setuptools>=61.0']
-build-backend = "setuptools.build_meta"
-
-[project]
-name = "Easy-ICD"
-version = "0.0.1"
-authors = [
-  { name="Sashwat Anagolum", email="sashwat.anagolum@gmail.com" },
-]
-description = "Easy-ICD: easily create image classification datasets"
-readme = "README.md"
-requires-python = ">=3.7"
-classifiers = [
-    "Programming Language :: Python :: 3",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-]
-
-[project.urls]
-"Homepage" = "https://github.com/SashwatAnagolum/Easy-ICD"
-"Bug Tracker" = "https://github.com/SashwatAnagolum/Easy-ICD/issues"
+requires = ['setuptools>=42']
+build-backend = 'setuptools.build_meta'
